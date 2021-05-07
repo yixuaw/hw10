@@ -1,0 +1,249 @@
+---
+title: "HW10"
+author: "Yixuan Wang"
+date: "5/6/2021"
+output: html_document
+---
+
+Welcome to my website for Homework 10!
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(plyr)
+library(readxl)
+library(tidyverse)
+library(network)
+library(igraph)
+```
+
+### Prepare the data for the network analysis (create a separate edge and node list)
+Notes:
+1) Q2 contain people's names. Since it's anonymous, the names became numbers. 
+2) Q3_1 - Q3_40 all asks: Tell me some information about the relationships you have with other people in this class.
+3) Q4 asks: Are you introverted or extroverted? 1 = introverted, 2 = middle ground, 3 = extroverted.
+
+
+```{r}
+#Preparing the data
+network_data <- read_excel("hw10.xlsx")
+# nodelist
+nodelist0 <- read_excel("hw10.xlsx")[-1,]
+  
+colnames(nodelist0) <- c("ID",1:40, "personality")
+
+#nodelist <- nodelist0 %>%
+#  select(ID,personality) %>%
+# drop_na()
+
+# create a dataset for nodelist 
+nodelist <- read_excel("for_nodelist.xlsx")
+
+# edgelist
+# out-tie is the participant
+# in-ties are the people the respondent are answering questions about
+# tie-type: 1) I have texted in the last 7 days, 2) I have met during my time in MBDS, 3) Is my friend,
+# 4) I asked for advice/help, 5) Asks me for help/advice
+ 
+edge <- nodelist0 %>%
+  pivot_longer(col = -c(ID, personality), names_to = "in-tie", values_to = "value")  
+
+rename(edge, c("out-tie" = "ID")) -> edge
+
+edgelist <- separate_rows(edge, value, sep = ",")
+
+edgelist <- edgelist %>%
+  select(!personality)  
+
+edgelist <- rename(edgelist, setNames("value","tie_type"))
+ 
+edgelist <- edgelist %>%
+  drop_na()
+
+newnetwork <- graph_from_data_frame(d = edgelist, vertices = nodelist, directed = TRUE)
+plot(newnetwork, edge.arrow.size = 0.1, vertex.size = 3)
+```
+
+
+### Calculate measures of centrality and similarity in networks depending on the type of tie? Which tie type generates the most similar network in terms of introversion? Which tie type is the most dissimilar?
+
+
+```{r}
+#for tie-type1
+#network
+edgelist1 = subset(edgelist, tie_type == 1)
+newnetwork1 <- graph_from_data_frame(d = edgelist1, vertices = nodelist, directed = TRUE)
+plot(newnetwork1, edge.arrow.size = 0.1, vertex.size = 3)
+#Degree Centrality 
+degree(newnetwork1, mode="in")
+centr_degree(newnetwork1, mode="in", normalized=T)
+degree(newnetwork1, mode="out")
+centr_degree(newnetwork1, mode="out", normalized=T)
+degree(newnetwork1, mode="all")
+centr_degree(newnetwork1, mode="all", normalized=T)
+#Closeness Centrality
+closeness(newnetwork1, mode="all", weights=NA)
+#Eigenvector Centrality
+eigen_centrality(newnetwork1, directed=T, weights=NA)
+#Betweenness Centrality
+betweenness(newnetwork1, directed=T, weights=NA)
+#Similarity
+net1 <- graph_from_data_frame(d = edgelist1,vertices = nodelist,directed = TRUE)
+#Remove missing values from nodelist 
+net1.0 = subgraph(net1, v = nodelist$ID[!is.na(nodelist$personality)])
+assortativity_degree(net1.0, directed=T)
+assortativity(net1.0, V(net1.0)$personality, directed=T)
+```
+
+```{r}
+#for tie-type2
+#network
+edgelist2 = subset(edgelist, tie_type == 2)
+newnetwork2 <- graph_from_data_frame(d = edgelist2, vertices = nodelist, directed = TRUE)
+plot(newnetwork2, edge.arrow.size = 0.1, vertex.size = 3)
+#Degree Centrality 
+degree(newnetwork2, mode="in")
+centr_degree(newnetwork2, mode="in", normalized=T)
+degree(newnetwork2, mode="out")
+centr_degree(newnetwork2, mode="out", normalized=T)
+degree(newnetwork2, mode="all")
+centr_degree(newnetwork2, mode="all", normalized=T)
+#Closeness Centrality
+closeness(newnetwork2, mode="all", weights=NA)
+#Eigenvector Centrality
+eigen_centrality(newnetwork2, directed=T, weights=NA)
+#Betweenness Centrality
+betweenness(newnetwork2, directed=T, weights=NA)
+#Similarity 
+net2 <- graph_from_data_frame(d = edgelist2,vertices = nodelist,directed = TRUE)
+#Remove missing values from nodelist 
+net2.0 = subgraph(net2, v = nodelist$ID[!is.na(nodelist$personality)])
+assortativity_degree(net2.0, directed=T)
+assortativity(net2.0, V(net2.0)$personality, directed=T)
+```
+
+```{r}
+#for tie-type3
+#network
+edgelist3 = subset(edgelist, tie_type == 3)
+newnetwork3 <- graph_from_data_frame(d = edgelist3, vertices = nodelist, directed = TRUE)
+plot(newnetwork3, edge.arrow.size = 0.1, vertex.size = 3)
+#Degree Centrality 
+degree(newnetwork3, mode="in")
+centr_degree(newnetwork3, mode="in", normalized=T)
+degree(newnetwork3, mode="out")
+centr_degree(newnetwork3, mode="out", normalized=T)
+degree(newnetwork3, mode="all")
+centr_degree(newnetwork3, mode="all", normalized=T)
+#Closeness Centrality
+closeness(newnetwork3, mode="all", weights=NA)
+#Eigenvector Centrality
+eigen_centrality(newnetwork3, directed=T, weights=NA)
+#Betweenness Centrality
+betweenness(newnetwork3, directed=T, weights=NA)
+#Similarity 
+net3 <- graph_from_data_frame(d = edgelist3,vertices = nodelist,directed = TRUE)
+#Remove missing values from nodelist 
+net3.0 = subgraph(net3, v = nodelist$ID[!is.na(nodelist$personality)])
+assortativity_degree(net3.0, directed=T)
+assortativity(net3.0, V(net3.0)$personality, directed=T)
+```
+
+```{r}
+#for tie-type4
+#network
+edgelist4 = subset(edgelist, tie_type == 4)
+newnetwork4 <- graph_from_data_frame(d = edgelist4, vertices = nodelist, directed = TRUE)
+plot(newnetwork4, edge.arrow.size = 0.1, vertex.size = 3)
+#Degree Centrality 
+degree(newnetwork4, mode="in")
+centr_degree(newnetwork4, mode="in", normalized=T)
+degree(newnetwork4, mode="out")
+centr_degree(newnetwork4, mode="out", normalized=T)
+degree(newnetwork4, mode="all")
+centr_degree(newnetwork4, mode="all", normalized=T)
+#Closeness Centrality
+closeness(newnetwork4, mode="all", weights=NA)
+#Eigenvector Centrality
+eigen_centrality(newnetwork4, directed=T, weights=NA)
+#Betweenness Centrality
+betweenness(newnetwork4, directed=T, weights=NA)
+#Similarity 
+net4 <- graph_from_data_frame(d = edgelist4,vertices = nodelist,directed = TRUE)
+#Remove missing values from nodelist 
+net4.0 = subgraph(net4, v = nodelist$ID[!is.na(nodelist$personality)])
+assortativity_degree(net4.0, directed=T)
+assortativity(net4.0, V(net4.0)$personality, directed=T)
+```
+
+```{r}
+#for tie-type5
+#network
+edgelist5 = subset(edgelist, tie_type == 5)
+newnetwork5 <- graph_from_data_frame(d = edgelist5, vertices = nodelist, directed = TRUE)
+plot(newnetwork4, edge.arrow.size = 0.1, vertex.size = 3)
+#Degree Centrality 
+degree(newnetwork5, mode="in")
+centr_degree(newnetwork5, mode="in", normalized=T)
+degree(newnetwork5, mode="out")
+centr_degree(newnetwork5, mode="out", normalized=T)
+degree(newnetwork5, mode="all")
+centr_degree(newnetwork5, mode="all", normalized=T)
+#Closeness Centrality
+closeness(newnetwork5, mode="all", weights=NA)
+#Eigenvector Centrality
+eigen_centrality(newnetwork5, directed=T, weights=NA)
+#Betweenness Centrality
+betweenness(newnetwork5, directed=T, weights=NA)
+#Similarity 
+net5 <- graph_from_data_frame(d = edgelist5,vertices = nodelist,directed = TRUE)
+#Remove missing values from nodelist 
+net5.0 = subgraph(net5, v = nodelist$ID[!is.na(nodelist$personality)])
+assortativity_degree(net5.0, directed=T)
+assortativity(net5.0, V(net5.0)$personality, directed=T)
+```
+
+
+Which tie type generates the most similar/dissimilar network in terms of introversion?
+```{r}
+nodelist$introvert = nodelist$personality == 1
+
+net1.1 <- graph_from_data_frame(d = edgelist1, vertices = nodelist, directed = TRUE)
+net2.1 <- graph_from_data_frame(d = edgelist2, vertices = nodelist, directed = TRUE)
+net3.1 <- graph_from_data_frame(d = edgelist3, vertices = nodelist, directed = TRUE)
+net4.1 <- graph_from_data_frame(d = edgelist4, vertices = nodelist, directed = TRUE)
+net5.1 <- graph_from_data_frame(d = edgelist5, vertices = nodelist, directed = TRUE)
+
+net1.2 = subgraph(net1.1, v = nodelist$ID[!is.na(nodelist$introvert)])
+net2.2 = subgraph(net2.1, v = nodelist$ID[!is.na(nodelist$introvert)])
+net3.2 = subgraph(net3.1, v = nodelist$ID[!is.na(nodelist$introvert)])
+net4.2 = subgraph(net4.1, v = nodelist$ID[!is.na(nodelist$introvert)])
+net5.2 = subgraph(net5.1, v = nodelist$ID[!is.na(nodelist$introvert)])
+assortativity(net1.2, V(net1.2)$introvert, directed=T) 
+assortativity(net2.2, V(net2.2)$introvert, directed=T) 
+assortativity(net3.2, V(net3.2)$introvert, directed=T) 
+assortativity(net4.2, V(net4.2)$introvert, directed=T) 
+assortativity(net5.2, V(net5.2)$introvert, directed=T) 
+```
+
+According to the output, tie-type 1 generates the most similar network in terms of introversion, and tie-type 2 generates the most dissimilar network.
+
+
+### Do introverts tend to be at the periphery while extraverts are in the center of the network? Motivate.
+
+```{r}
+# using regression model
+# DV is betweenness centrality, IV is whether introverts or extraverts
+newnetwork <- graph_from_data_frame(d = edgelist, vertices = nodelist, directed = TRUE)
+modeldata <- nodelist %>% 
+  mutate(centrality = betweenness(newnetwork, directed=T, weights=NA))
+dplyr::filter(modeldata, personality %in% c("1","3")) -> modeldata
+model1 <- lm(`centrality` ~ personality, data = modeldata)
+summary(model1)
+```
+
+The model shows a negative but statistically insignificant relationship between personality and centrality. Therefore, we cannot say introverts tend to be at the periphery while extraverts are in the center of the network. A major reason for this result should be that the sample size is too small. There are only 6 participants chose "Introverted" or "Extraverted" for the introversion question. 
+
+-------------------------
+In the end, I would like to thank my team members for brainstorming ideas for this document.
+
+*Group Cheetahs*: Jason Kang, Shishi Li, Yixuan Wang, Bingling Wang, Mason Shihab.

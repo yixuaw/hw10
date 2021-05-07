@@ -1,0 +1,12 @@
+name: "yixuan wang's website"
+output_dir: "."
+navbar:
+  title: "Yixuan Wang"
+  left:
+    - text: "Homework10"
+      href: index.html
+
+output:
+  html_document:
+    theme: simplex
+    highlight: textmate
